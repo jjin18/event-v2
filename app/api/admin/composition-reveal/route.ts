@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { attendees, events, sponsors } from "@/db/schema";
 import { sendCompositionRevealEmail } from "@/lib/email";
+import { getActiveEventId } from "@/lib/active-event";
 
 export async function POST() {
   try {
@@ -13,7 +14,7 @@ export async function POST() {
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
   if (!event) return new NextResponse("event not found", { status: 404 });

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { attendees, scans } from "@/db/schema";
 import { toCsv } from "@/lib/csv";
+import { getActiveEventId } from "@/lib/active-event";
 
 const ATTENDEE_HEADERS = [
   "id",
@@ -40,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ entity:
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const { entity } = await params;

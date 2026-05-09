@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { outcomes, sponsors } from "@/db/schema";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({
   attendeeId: z.string().uuid(),
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const sponsor = await db.query.sponsors.findFirst({ where: eq(sponsors.eventId, eventId) });

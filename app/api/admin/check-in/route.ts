@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { attendees } from "@/db/schema";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({ qrCode: z.string().min(8).max(64) });
 
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));

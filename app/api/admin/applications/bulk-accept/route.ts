@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { attendees, events } from "@/db/schema";
 import { sendAcceptanceEmail } from "@/lib/email";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({
   threshold: z.number().int().min(0).max(100).default(70),
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));

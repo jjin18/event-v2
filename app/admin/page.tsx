@@ -3,14 +3,18 @@ import { count, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { attendees, events, scans, sponsors } from "@/db/schema";
 import { CompositionRevealButton } from "./composition-reveal-button";
+import { getActiveEventId } from "@/lib/active-event";
 
 export default async function AdminOverview() {
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) {
     return (
       <div>
         <h1 className="text-2xl font-semibold">No active event</h1>
-        <p className="mt-2 text-muted">Set M1_EVENT_ID and refresh.</p>
+        <p className="mt-2 text-muted">
+          Hit <code className="font-mono">POST /api/setup?token=…</code> to bootstrap the event and
+          sponsor.
+        </p>
       </div>
     );
   }

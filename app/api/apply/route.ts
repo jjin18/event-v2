@@ -9,6 +9,7 @@ import { fetchGitHubProfile } from "@/lib/github";
 import { computeConfidence } from "@/lib/confidence";
 import { generateQrCode } from "@/lib/qr";
 import { sendAcceptanceEmail, sendApplicationReceivedEmail } from "@/lib/email";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({
   school: z.string().min(1).max(255),
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return new NextResponse("unauthorized", { status: 401 });
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event configured", { status: 400 });
 
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
