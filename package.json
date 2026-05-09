@@ -13,7 +13,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.95.0",
     "@clerk/nextjs": "^6.10.0",
     "@octokit/rest": "^21.0.2",
     "drizzle-orm": "^0.38.3",

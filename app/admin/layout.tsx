@@ -12,7 +12,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <nav className="flex gap-4 text-sm text-muted">
             <Link href="/admin">Overview</Link>
             <Link href="/admin/applications">Applications</Link>
+            <Link href="/admin/matches">Matches</Link>
+            <Link href="/admin/check-in">Check-in</Link>
             <Link href="/admin/scans">Scans</Link>
+            <Link href="/admin/outcomes">Outcomes</Link>
             <Link href="/admin/packet">Post-event packet</Link>
           </nav>
         </div>

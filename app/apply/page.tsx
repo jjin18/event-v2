@@ -21,7 +21,7 @@ export default function ApplyPage() {
 
   if (!isLoaded) return <main className="p-8 text-muted">Loading…</main>;
 
-  const githubAccount = user?.externalAccounts.find((a) => a.provider === "oauth_github");
+  const githubAccount = user?.externalAccounts.find((a) => a.provider === "github");
 
   return (
     <main className="mx-auto max-w-xl px-6 py-16">

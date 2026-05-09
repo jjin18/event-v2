@@ -2,6 +2,7 @@ import { count, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { attendees, events, scans, sponsors } from "@/db/schema";
+import { CompositionRevealButton } from "./composition-reveal-button";
 
 export default async function AdminOverview() {
   const eventId = process.env.M1_EVENT_ID;
@@ -31,12 +32,15 @@ export default async function AdminOverview() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-sm uppercase tracking-wide text-muted">{event.organizerName}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{event.name}</h1>
-        <p className="text-sm text-muted">
-          {new Date(event.date).toLocaleDateString()} · {event.location}
-        </p>
+      <header className="flex items-start justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-muted">{event.organizerName}</p>
+          <h1 className="mt-1 text-2xl font-semibold">{event.name}</h1>
+          <p className="text-sm text-muted">
+            {new Date(event.date).toLocaleDateString()} · {event.location}
+          </p>
+        </div>
+        <CompositionRevealButton />
       </header>
 
       <div className="grid grid-cols-3 gap-4">

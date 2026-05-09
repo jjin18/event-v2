@@ -53,7 +53,9 @@ export async function POST(req: Request) {
 
   const user = await currentUser();
   const clerkPrimaryEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-  const githubAccount = user?.externalAccounts.find((a) => a.provider === "oauth_github");
+  const githubAccount = user?.externalAccounts.find(
+    (a) => a.provider === "github" || a.provider === "oauth_github",
+  );
   const githubUsername = githubAccount?.username ?? null;
 
   const githubData = githubUsername ? await fetchGitHubProfile(githubUsername) : null;

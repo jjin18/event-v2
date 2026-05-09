@@ -24,8 +24,8 @@ export async function fetchGitHubProfile(username: string): Promise<GitHubData |
       .slice(0, 5)
       .map((r) => ({
         name: r.name,
-        description: r.description,
-        language: r.language,
+        description: r.description ?? null,
+        language: r.language ?? null,
         stars: r.stargazers_count ?? 0,
         updatedAt: r.updated_at ?? "",
       }));

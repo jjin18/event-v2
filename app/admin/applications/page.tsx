@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { attendees } from "@/db/schema";
 import { ApplicationsTable } from "./table";
+import { BulkAccept } from "./bulk-accept";
 
 export default async function ApplicationsPage() {
   const eventId = process.env.M1_EVENT_ID;
@@ -15,10 +16,20 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Applications</h1>
-      <p className="text-sm text-muted">
-        Auto-approved at confidence ≥ 70. Borderline applications need manual review.
-      </p>
+      <header className="flex items-baseline justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Applications</h1>
+          <p className="text-sm text-muted">
+            Auto-approved at confidence ≥ 70. Borderline applications need manual review.
+          </p>
+        </div>
+        <div className="flex items-end gap-2">
+          <a className="btn-secondary" href="/api/admin/export/attendees">
+            Export CSV
+          </a>
+          <BulkAccept />
+        </div>
+      </header>
       <ApplicationsTable
         rows={rows.map((r) => ({
           id: r.id,
