@@ -10,20 +10,25 @@ export const dynamic = "force-dynamic";
 async function getActiveEvent() {
   const eventId = await getActiveEventId();
   if (!eventId) return null;
-  const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
-  if (!event) return null;
+  try {
+    const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
+    if (!event) return null;
 
-  const confirmed = await db
-    .select({ count: attendees.id })
-    .from(attendees)
-    .where(
-      and(
-        eq(attendees.eventId, event.id),
-        inArray(attendees.applicationStatus, ["accepted", "auto_approved"]),
-      ),
-    );
+    const confirmed = await db
+      .select({ count: attendees.id })
+      .from(attendees)
+      .where(
+        and(
+          eq(attendees.eventId, event.id),
+          inArray(attendees.applicationStatus, ["accepted", "auto_approved"]),
+        ),
+      );
 
-  return { event, confirmedCount: confirmed.length };
+    return { event, confirmedCount: confirmed.length };
+  } catch (err) {
+    console.warn("[home] failed to load event:", err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 export default async function Home() {
