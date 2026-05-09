@@ -3,9 +3,10 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { attendeeMatches, attendees, sponsors } from "@/db/schema";
 import { RecomputeButton } from "./recompute-button";
+import { getActiveEventId } from "@/lib/active-event";
 
 export default async function MatchesPage() {
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return <p className="text-muted">No active event.</p>;
 
   const sponsor = await db.query.sponsors.findFirst({ where: eq(sponsors.eventId, eventId) });

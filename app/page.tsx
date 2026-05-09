@@ -3,11 +3,12 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { attendees, events } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { getActiveEventId } from "@/lib/active-event";
 
 export const dynamic = "force-dynamic";
 
 async function getActiveEvent() {
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return null;
   const event = await db.query.events.findFirst({ where: eq(events.id, eventId) });
   if (!event) return null;
@@ -33,7 +34,9 @@ export default async function Home() {
       <main className="mx-auto max-w-2xl px-6 py-24">
         <h1 className="text-3xl font-semibold">No active event</h1>
         <p className="mt-4 text-muted">
-          M1_EVENT_ID is not set. Configure an event in the admin to launch the public RSVP page.
+          Run the bootstrap once to seed the event and sponsor:{" "}
+          <code className="font-mono">POST /api/setup?token=…</code>. After that, this page goes
+          live automatically — no redeploy needed.
         </p>
       </main>
     );

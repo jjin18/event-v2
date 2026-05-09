@@ -4,11 +4,12 @@ import { db } from "@/lib/db";
 import { attendees } from "@/db/schema";
 import { CheckInScanner } from "./scanner";
 import { WalkInForm } from "./walk-in-form";
+import { getActiveEventId } from "@/lib/active-event";
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckInPage() {
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return <p className="text-muted">No active event.</p>;
 
   const [confirmedCount] = await db

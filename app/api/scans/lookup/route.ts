@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { attendees, scans, sponsors } from "@/db/schema";
 import { getOrComputeMatch } from "@/lib/matching";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({ qrCode: z.string().min(8).max(64) });
 
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return new NextResponse("unauthorized", { status: 401 });
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const user = await currentUser();

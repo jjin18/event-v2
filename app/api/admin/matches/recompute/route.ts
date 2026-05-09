@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sponsors } from "@/db/schema";
 import { recomputeEventMatches } from "@/lib/matching";
+import { getActiveEventId } from "@/lib/active-event";
 
 const Body = z.object({
   sponsorId: z.string().uuid().optional(),
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     return resp as Response;
   }
 
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return new NextResponse("no active event", { status: 400 });
 
   const parsed = Body.safeParse(await req.json().catch(() => ({})));

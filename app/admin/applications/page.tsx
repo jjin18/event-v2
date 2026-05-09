@@ -4,9 +4,10 @@ import { db } from "@/lib/db";
 import { attendees } from "@/db/schema";
 import { ApplicationsTable } from "./table";
 import { BulkAccept } from "./bulk-accept";
+import { getActiveEventId } from "@/lib/active-event";
 
 export default async function ApplicationsPage() {
-  const eventId = process.env.M1_EVENT_ID;
+  const eventId = await getActiveEventId();
   if (!eventId) return <p className="text-muted">No active event.</p>;
 
   const rows = await db.query.attendees.findMany({
