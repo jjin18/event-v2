@@ -10,8 +10,13 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { and, eq, inArray } from "drizzle-orm";
 
-import type { Attendee, IcpDefinition, MatchStatus } from "@/db/schema";
+import type { Attendee, IcpDefinition } from "@/db/schema";
+import { attendeeMatches, attendees, matchStatus, sponsors } from "@/db/schema";
+import { db } from "@/lib/db";
+
+type MatchStatus = (typeof matchStatus.enumValues)[number];
 
 const PROHIBITED_ICP_FIELDS = new Set(["race", "gender", "ethnicity", "religion", "age"]);
 
@@ -119,6 +124,110 @@ export async function evaluateMatch(
     matchedCriteria: parsed.matched_criteria,
     missingCriteria: parsed.missing_criteria,
   };
+}
+
+/**
+ * Cache-aware match: returns a stored result if present, otherwise computes
+ * via the LLM and writes the cache entry. Used by the booth scanner so we
+ * don't pay the model call twice for the same (sponsor, attendee) pair.
+ */
+export async function getOrComputeMatch(
+  sponsorId: string,
+  eventId: string,
+  attendee: Pick<
+    Attendee,
+    "id" | "name" | "school" | "currentRole" | "classYear" | "claimsText" | "githubData"
+  >,
+  icp: IcpDefinition,
+): Promise<MatchResult> {
+  const existing = await db.query.attendeeMatches.findFirst({
+    where: and(
+      eq(attendeeMatches.sponsorId, sponsorId),
+      eq(attendeeMatches.attendeeId, attendee.id),
+    ),
+  });
+  if (existing) {
+    return {
+      status: existing.status,
+      reasoning: existing.reasoning,
+      matchedCriteria: existing.matchedCriteria,
+      missingCriteria: existing.missingCriteria,
+    };
+  }
+
+  const result = await evaluateMatch(attendee, icp);
+  await db
+    .insert(attendeeMatches)
+    .values({
+      eventId,
+      sponsorId,
+      attendeeId: attendee.id,
+      status: result.status,
+      reasoning: result.reasoning,
+      matchedCriteria: result.matchedCriteria,
+      missingCriteria: result.missingCriteria,
+    })
+    .onConflictDoUpdate({
+      target: [attendeeMatches.sponsorId, attendeeMatches.attendeeId],
+      set: {
+        status: result.status,
+        reasoning: result.reasoning,
+        matchedCriteria: result.matchedCriteria,
+        missingCriteria: result.missingCriteria,
+        computedAt: new Date(),
+      },
+    });
+
+  return result;
+}
+
+/**
+ * Batch pre-event matching: compute for every confirmed attendee at the event
+ * for a given sponsor. Returns the count of newly computed matches. Existing
+ * cached matches are skipped unless `force` is true.
+ */
+export async function recomputeEventMatches(
+  sponsorId: string,
+  options: { force?: boolean } = {},
+): Promise<{ computed: number; cached: number; failed: number }> {
+  const sponsor = await db.query.sponsors.findFirst({ where: eq(sponsors.id, sponsorId) });
+  if (!sponsor) throw new Error(`sponsor ${sponsorId} not found`);
+
+  const confirmed = await db.query.attendees.findMany({
+    where: and(
+      eq(attendees.eventId, sponsor.eventId),
+      inArray(attendees.applicationStatus, ["accepted", "auto_approved"]),
+    ),
+  });
+
+  if (options.force) {
+    await db
+      .delete(attendeeMatches)
+      .where(eq(attendeeMatches.sponsorId, sponsorId));
+  }
+
+  let computed = 0;
+  let cached = 0;
+  let failed = 0;
+  for (const attendee of confirmed) {
+    const before = await db.query.attendeeMatches.findFirst({
+      where: and(
+        eq(attendeeMatches.sponsorId, sponsorId),
+        eq(attendeeMatches.attendeeId, attendee.id),
+      ),
+    });
+    if (before) {
+      cached += 1;
+      continue;
+    }
+    try {
+      await getOrComputeMatch(sponsorId, sponsor.eventId, attendee, sponsor.icpDefinition);
+      computed += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+  return { computed, cached, failed };
 }
 
 function renderIcpForPrompt(icp: IcpDefinition): string {

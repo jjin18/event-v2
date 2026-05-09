@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { attendees, scans, sponsors } from "@/db/schema";
-import { evaluateMatch } from "@/lib/matching";
+import { getOrComputeMatch } from "@/lib/matching";
 
 const Body = z.object({
   attendeeId: z.string().uuid(),
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   let match;
   try {
-    match = await evaluateMatch(attendee, sponsor.icpDefinition);
+    match = await getOrComputeMatch(sponsor.id, sponsor.eventId, attendee, sponsor.icpDefinition);
   } catch (err) {
     match = {
       status: "needs_review" as const,

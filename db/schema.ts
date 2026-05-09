@@ -153,6 +153,31 @@ export const scans = pgTable(
   ],
 );
 
+export const attendeeMatches = pgTable(
+  "attendee_matches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    sponsorId: uuid("sponsor_id")
+      .notNull()
+      .references(() => sponsors.id, { onDelete: "cascade" }),
+    attendeeId: uuid("attendee_id")
+      .notNull()
+      .references(() => attendees.id, { onDelete: "cascade" }),
+    status: matchStatus("status").notNull(),
+    reasoning: text("reasoning").notNull().default(""),
+    matchedCriteria: jsonb("matched_criteria").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    missingCriteria: jsonb("missing_criteria").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("attendee_matches_sponsor_attendee_idx").on(table.sponsorId, table.attendeeId),
+    index("attendee_matches_event_status_idx").on(table.eventId, table.status),
+  ],
+);
+
 export const outcomes = pgTable(
   "outcomes",
   {
@@ -181,6 +206,7 @@ export type Attendee = typeof attendees.$inferSelect;
 export type NewAttendee = typeof attendees.$inferInsert;
 export type Sponsor = typeof sponsors.$inferSelect;
 export type Scan = typeof scans.$inferSelect;
+export type AttendeeMatch = typeof attendeeMatches.$inferSelect;
 export type Outcome = typeof outcomes.$inferSelect;
 
 export type GitHubData = {

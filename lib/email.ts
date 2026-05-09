@@ -51,3 +51,46 @@ export async function sendRejectionEmail(to: string, eventName: string): Promise
     text: `Thanks for applying to ${eventName}. Unfortunately we couldn't fit you into the room this time. We hope to see you at a future event.`,
   });
 }
+
+/**
+ * Composition reveal sent to confirmed attendees ~3 days before the event.
+ * Lists who's coming (aggregated, no PII beyond schools/roles) and the sponsor
+ * roster. The model in the M1 plan: high-signal attendees decide whether to
+ * harden their commitment based on the room they'll actually be in.
+ */
+export async function sendCompositionRevealEmail(
+  to: string,
+  eventName: string,
+  body: {
+    confirmedCount: number;
+    breakdown: Array<{ label: string; count: number }>;
+    sponsorBlurbs: Array<{ company: string; focus: string }>;
+  },
+): Promise<void> {
+  const breakdownLines = body.breakdown
+    .filter((b) => b.count > 0)
+    .map((b) => `- ${b.count} ${b.label}`)
+    .join("\n");
+  const sponsorLines = body.sponsorBlurbs
+    .map((s) => `- ${s.company}: ${s.focus}`)
+    .join("\n");
+
+  const text = [
+    `The room for ${eventName} is taking shape.`,
+    "",
+    `Confirmed attendees: ${body.confirmedCount}`,
+    breakdownLines || "(breakdown unavailable)",
+    "",
+    "Sponsors at this event:",
+    sponsorLines || "(none yet)",
+    "",
+    "If you've already RSVPed, no action needed — your QR code from the acceptance email is your check-in pass. If your plans changed, please reply to this email so we can release your slot.",
+  ].join("\n");
+
+  await resend().emails.send({
+    from: FROM,
+    to,
+    subject: `Who's coming to ${eventName}`,
+    text,
+  });
+}

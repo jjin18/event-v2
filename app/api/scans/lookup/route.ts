@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { attendees, scans, sponsors } from "@/db/schema";
-import { evaluateMatch } from "@/lib/matching";
+import { getOrComputeMatch } from "@/lib/matching";
 
 const Body = z.object({ qrCode: z.string().min(8).max(64) });
 
@@ -45,7 +45,12 @@ export async function POST(req: Request) {
 
   if (!matchStatus) {
     try {
-      const result = await evaluateMatch(attendee, sponsor.icpDefinition);
+      const result = await getOrComputeMatch(
+        sponsor.id,
+        sponsor.eventId,
+        attendee,
+        sponsor.icpDefinition,
+      );
       matchStatus = result.status;
       matchReasoning = result.reasoning;
     } catch (err) {

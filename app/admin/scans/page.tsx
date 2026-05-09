@@ -29,11 +29,18 @@ export default async function ScansPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Scans</h1>
-      <p className="text-sm text-muted">
-        {rows.length} total · {rows.filter((r) => r.matchStatus === "match").length} verified ICP
-        matches for {sponsor.companyName}.
-      </p>
+      <header className="flex items-baseline justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Scans</h1>
+          <p className="text-sm text-muted">
+            {rows.length} total · {rows.filter((r) => r.matchStatus === "match").length} verified ICP
+            matches for {sponsor.companyName}.
+          </p>
+        </div>
+        <a className="btn-secondary" href="/api/admin/export/scans">
+          Export CSV
+        </a>
+      </header>
 
       <div className="overflow-hidden rounded-lg border border-border">
         <table className="w-full text-sm">
