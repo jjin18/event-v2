@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { attendees, events } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 async function getActiveEvent() {
   const eventId = process.env.M1_EVENT_ID;
   if (!eventId) return null;
